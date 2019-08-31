@@ -1,11 +1,10 @@
-import discord
 from discord.ext import commands
 from tinydb import TinyDB, Query
 
 bot = commands.Bot(command_prefix="!re")
 server = TinyDB("Data.json")
 
-muted_role_id = 517400874709155860 #actual id for RE
+muted_role_id = 517400874709155860  # actual id for RE
 
 
 def get_or_make_guild(server_id):
@@ -16,10 +15,9 @@ def get_or_make_guild(server_id):
 
 @bot.event
 async def on_ready():
-    global appli
-    appli = await bot.application_info()
+    app_info = await bot.application_info()
     print("Logged in! bot invite: https://discordapp.com/api/oauth2/authorize?client_id=" +
-          str(appli.id) + "&permissions=0&scope=bot")
+          str(app_info.id) + "&permissions=0&scope=bot")
 
 
 @bot.event
