@@ -29,7 +29,7 @@ async def on_member_join(member):
         await member.add_roles(member.guild.get_role(stickied["role_id"]), reason="Role Persistence")
 
         server.remove((Query().server_id == member.guild.id) & (Query().member_id == member.id))
-        print(member.name + " caught mute evading")
+        print(member.name + " stickied roles restored")
 
 
 bot.run(config.search(Query().bot_secret)[0]["bot_secret"])
