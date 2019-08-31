@@ -27,7 +27,6 @@ async def on_member_remove(member):
 async def on_member_join(member):
     for stickied in server.search((Query().server_id == member.guild.id) & (Query().member_id == member.id)):
         await member.add_roles(member.guild.get_role(stickied["role_id"]), reason="Role Persistence")
-
         server.remove((Query().server_id == member.guild.id) & (Query().member_id == member.id))
         print(member.name + " stickied roles restored")
 
