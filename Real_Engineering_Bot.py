@@ -5,7 +5,7 @@ from tinydb import TinyDB, Query
 server = TinyDB("Data.json")
 
 config_file = open("config.yaml")
-config = yaml.load(config_file)
+config = yaml.load(config_file, Loader=yaml.FullLoader)
 config_file.close()
 
 bot = commands.Bot(command_prefix=config["bot_prefix"])
@@ -20,7 +20,6 @@ async def on_ready():
 
 @bot.event
 async def on_member_remove(member):
-    print(member.name + " left")
     for stickied in config["sticky_roles"]:
         if member.guild.get_role(stickied) in member.roles:
             server.insert({"server_id": member.guild.id, "member_id": member.id, "role_id": stickied})
