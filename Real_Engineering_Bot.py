@@ -1,10 +1,14 @@
+import yaml
 from discord.ext import commands
 from tinydb import TinyDB, Query
 
 server = TinyDB("Data.json")
-config = TinyDB("Config.json")
 
-bot = commands.Bot(command_prefix=config.search(Query().bot_prefix)[0]["bot_prefix"])
+config_file = open("config.yaml")
+config = yaml.load(config_file)
+config_file.close()
+
+bot = commands.Bot(command_prefix=config["bot_prefix"])
 
 
 @bot.event
@@ -17,7 +21,7 @@ async def on_ready():
 @bot.event
 async def on_member_remove(member):
     print(member.name + " left")
-    for stickied in config.search(Query().sticky_roles)[0]["sticky_roles"]:
+    for stickied in config["sticky_roles"]:
         if member.guild.get_role(stickied) in member.roles:
             server.insert({"server_id": member.guild.id, "member_id": member.id, "role_id": stickied})
             print(member.name + " caught leaving with a stickied role")
@@ -31,4 +35,4 @@ async def on_member_join(member):
         print(member.name + " stickied roles restored")
 
 
-bot.run(config.search(Query().bot_secret)[0]["bot_secret"])
+bot.run(config["bot_secret"])
