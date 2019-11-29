@@ -5,7 +5,8 @@ from tinydb import TinyDB, Query
 bot = commands.Bot(command_prefix="!re")
 server = TinyDB("Data.json")
 
-muted_role_id = 517400874709155860 #actual id for RE
+muted_role_id = 517400874709155860  # actual id for RE
+log_channel_id = 480190548511031306  # id for RE
 
 
 def get_or_make_guild(server_id):
@@ -20,6 +21,34 @@ async def on_ready():
     appli = await bot.application_info()
     print("Logged in! bot invite: https://discordapp.com/api/oauth2/authorize?client_id=" +
           str(appli.id) + "&permissions=0&scope=bot")
+
+
+@bot.event
+async def on_message_delete(message):
+    embed = discord.Embed()
+    embed.title = "Deleted Message"
+    embed.set_author(name=message.author)
+    embed.add_field(name="UserId", value=message.author.id, inline=False)
+    embed.add_field(name="Channel", value="<#%d>" % message.channel.id, inline=False)
+    embed.add_field(name="Content", value=message.content, inline=False)
+    await bot.get_channel(log_channel_id).send(embed=embed)
+
+
+@bot.event
+async def on_message_edit(before, after):
+    if before.content is not "":
+        embed = discord.Embed()
+        embed.title = "Edited Message"
+        embed.set_author(name=after.author)
+        embed.add_field(name="UserId", value=after.author.id, inline=False)
+        embed.add_field(name="Channel", value="<#%d>" % before.channel.id, inline=False)
+        print(before.content)
+        embed.add_field(name="Before", value=before.content, inline=False)
+        print(after.content)
+        embed.add_field(name="After", value=after.content, inline=False)
+        print(embed)
+        channel = bot.get_channel(log_channel_id)
+        await channel.send(embed=embed)
 
 
 @bot.event
