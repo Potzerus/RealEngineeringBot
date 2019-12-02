@@ -39,7 +39,7 @@ async def on_message_edit(before, after):
     if before.content is not "":
         embed = discord.Embed()
         embed.title = "Edited Message"
-        embed.set_author(name=after.author)
+        embed.add_field(name="Username",value=after.author)
         embed.add_field(name="UserId", value=after.author.id, inline=False)
         embed.add_field(name="Channel", value="<#%d>" % before.channel.id, inline=False)
         print(before.content)
