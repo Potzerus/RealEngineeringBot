@@ -72,4 +72,9 @@ async def on_member_join(member):
         print(member.name + " caught mute evading")
 
 
-bot.run(open("RE-Token.txt").read())
+while True:
+    try:
+        bot.run(open("RE-Token.txt").read())
+    except Exception as e:
+        print(e)
+        continue
