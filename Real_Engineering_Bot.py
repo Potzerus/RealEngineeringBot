@@ -1,4 +1,7 @@
+import asyncio
 import sys
+import time
+import signal
 
 import discord
 from discord.ext import commands
@@ -24,7 +27,6 @@ async def on_ready():
     print("Logged in! bot invite: https://discordapp.com/api/oauth2/authorize?client_id=" +
           str(appli.id) + "&permissions=0&scope=bot")
 
-
 @bot.event
 async def on_message_delete(message):
     embed = discord.Embed()
@@ -38,7 +40,7 @@ async def on_message_delete(message):
 
 @bot.event
 async def on_message_edit(before, after):
-    if before.content is not "" and before.content is not after.content:
+    if before.content != "" and before.content is not after.content:
         embed = discord.Embed()
         embed.title = "Edited Message"
         embed.add_field(name="Username", value=after.author)
@@ -72,13 +74,3 @@ async def on_member_join(member):
             member.guild.get_role(muted_role_id), reason="Mute Persistence")
         server.update({"members": muted_members})
         print(member.name + " caught mute evading")
-
-
-while True:
-    try:
-        bot.run(open("RE-Token.txt").read())
-    except SystemExit:
-        sys.exit(0)
-    except Exception as e:
-        print(e)
-        continue
