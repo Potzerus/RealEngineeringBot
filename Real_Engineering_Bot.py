@@ -74,3 +74,6 @@ async def on_member_join(member):
             member.guild.get_role(muted_role_id), reason="Mute Persistence")
         server.update({"members": muted_members})
         print(member.name + " caught mute evading")
+
+
+bot.run(open("RE-Token.txt").read())
