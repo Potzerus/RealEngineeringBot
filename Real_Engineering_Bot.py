@@ -1,3 +1,5 @@
+import sys
+
 import discord
 from discord.ext import commands
 from tinydb import TinyDB, Query
@@ -27,7 +29,7 @@ async def on_ready():
 async def on_message_delete(message):
     embed = discord.Embed()
     embed.title = "Deleted Message"
-    embed.set_author(name=message.author)
+    embed.add_field(name="Username", value=message.author)
     embed.add_field(name="UserId", value=message.author.id, inline=False)
     embed.add_field(name="Channel", value="<#%d>" % message.channel.id, inline=False)
     embed.add_field(name="Content", value=message.content, inline=False)
@@ -36,10 +38,10 @@ async def on_message_delete(message):
 
 @bot.event
 async def on_message_edit(before, after):
-    if before.content is not "":
+    if before.content is not "" and before.content is not after.content:
         embed = discord.Embed()
         embed.title = "Edited Message"
-        embed.add_field(name="Username",value=after.author)
+        embed.add_field(name="Username", value=after.author)
         embed.add_field(name="UserId", value=after.author.id, inline=False)
         embed.add_field(name="Channel", value="<#%d>" % before.channel.id, inline=False)
         print(before.content)
@@ -75,6 +77,8 @@ async def on_member_join(member):
 while True:
     try:
         bot.run(open("RE-Token.txt").read())
+    except SystemExit:
+        sys.exit(0)
     except Exception as e:
         print(e)
         continue
