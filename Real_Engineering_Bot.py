@@ -46,11 +46,8 @@ async def on_message_edit(before, after):
         embed.add_field(name="Username", value=after.author)
         embed.add_field(name="UserId", value=after.author.id, inline=False)
         embed.add_field(name="Channel", value="<#%d>" % before.channel.id, inline=False)
-        print(before.content)
         embed.add_field(name="Before", value=before.content, inline=False)
-        print(after.content)
         embed.add_field(name="After", value=after.content, inline=False)
-        print(embed)
         channel = bot.get_channel(log_channel_id)
         await channel.send(embed=embed)
 
@@ -62,7 +59,6 @@ async def on_member_remove(member):
         members = server.all()[0]['members']
         members.append(member.id)
         server.update({"members": members}, Query().server == member.guild.id)
-        print(member.name + " caught leaving with a mute")
 
 
 @bot.event
@@ -73,7 +69,6 @@ async def on_member_join(member):
         await member.add_roles(
             member.guild.get_role(muted_role_id), reason="Mute Persistence")
         server.update({"members": muted_members})
-        print(member.name + " caught mute evading")
 
 
 bot.run(open("RE-Token.txt").read())

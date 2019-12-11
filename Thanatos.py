@@ -15,7 +15,8 @@ bot.help_command = None
 @commands.has_any_role(*authorized_roles)
 async def help(ctx):
     await ctx.send(
-        "> %sstart --- Starts the Bot\n%sstatus --- Displays Bot Status\n%sterminate --- Terminates the Bot" % bot.command_prefix)
+        ">>> %sstart --- Starts the Bot\n%sstatus --- Displays Bot Status\n%sterminate --- Terminates the Bot" % (
+        bot.command_prefix, bot.command_prefix, bot.command_prefix))
 
 
 @bot.command()
