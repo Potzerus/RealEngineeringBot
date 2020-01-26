@@ -28,6 +28,11 @@ async def on_ready():
           str(appli.id) + "&permissions=0&scope=bot")
 
 @bot.event
+async def on_bulk_message_delete(messages):
+    for message in messages:
+        await on_message_delete(message)
+
+@bot.event
 async def on_message_delete(message):
     embed = discord.Embed()
     embed.title = "Deleted Message"
