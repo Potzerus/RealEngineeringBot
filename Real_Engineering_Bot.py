@@ -30,11 +30,13 @@ async def on_ready():
 
 @bot.event
 async def on_bulk_message_delete(messages):
+    # Logging
     for message in messages:
         await on_message_delete(message)
 
 @bot.event
 async def on_message_delete(message):
+    # Logging
     embed = discord.Embed(color=discord.Color.red())
     embed.title = "Deleted Message"
     embed.add_field(name="Username", value=message.author)
@@ -46,6 +48,7 @@ async def on_message_delete(message):
 
 @bot.event
 async def on_message_edit(before, after):
+    # Logging
     if before.content != "" and before.content is not after.content:
         embed = discord.Embed(color=discord.Color.orange())
         embed.title = "Edited Message"
@@ -60,11 +63,14 @@ async def on_message_edit(before, after):
 
 @bot.event
 async def on_member_remove(member):
+    # Sticky Roles
     if member.guild.get_role(muted_role_id) in member.roles:
         get_or_make_guild(member.guild.id)
         members = server.all()[0]['members']
         members.append(member.id)
         server.update({"members": members}, Query().server == member.guild.id)
+
+    # Logging
     embed = discord.Embed(color=discord.Color.orange())
     embed.title = "User Left"
     embed.add_field(name="Username", value=member)
@@ -75,13 +81,15 @@ async def on_member_remove(member):
 
 @bot.event
 async def on_member_join(member):
+    # Sticky Roles
     muted_members = get_or_make_guild(member.guild.id)['members']
     if member.id in muted_members:
         muted_members.remove(member.id)
         await member.add_roles(
             member.guild.get_role(muted_role_id), reason="Mute Persistence")
         server.update({"members": muted_members})
-        
+
+    # Logging
     embed = discord.Embed(color=discord.Color.blue())
     embed.title = "User Joined"
     embed.add_field(name="Username", value=member)
