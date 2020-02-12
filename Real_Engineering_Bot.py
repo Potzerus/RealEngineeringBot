@@ -50,7 +50,7 @@ async def on_message_delete(message):
 async def on_message_edit(before, after):
     # Logging
     if before.content != "" and before.content is not after.content:
-        embed = discord.Embed(color=discord.Color.orange())
+        embed = discord.Embed(color=discord.Color.blue())
         embed.title = "Edited Message"
         embed.add_field(name="Username", value=after.author)
         embed.add_field(name="UserId", value=after.author.id, inline=False)
