@@ -35,27 +35,25 @@ async def on_bulk_message_delete(messages):
 
 @bot.event
 async def on_message_delete(message):
-    embed = discord.Embed()
+    embed = discord.Embed(color=discord.Color.red())
     embed.title = "Deleted Message"
     embed.add_field(name="Username", value=message.author)
     embed.add_field(name="UserId", value=message.author.id, inline=False)
     embed.add_field(name="Channel", value="<#%d>" % message.channel.id, inline=False)
     embed.add_field(name="Content", value=message.content, inline=False)
-    embed.color = Colour.red()
     await bot.get_channel(log_channel_id).send(embed=embed)
 
 
 @bot.event
 async def on_message_edit(before, after):
     if before.content != "" and before.content is not after.content:
-        embed = discord.Embed()
+        embed = discord.Embed(color=discord.Color.orange())
         embed.title = "Edited Message"
         embed.add_field(name="Username", value=after.author)
         embed.add_field(name="UserId", value=after.author.id, inline=False)
         embed.add_field(name="Channel", value="<#%d>" % before.channel.id, inline=False)
         embed.add_field(name="Before", value=before.content, inline=False)
         embed.add_field(name="After", value=after.content, inline=False)
-        embed.color = Colour.orange()
         channel = bot.get_channel(log_channel_id)
         await channel.send(embed=embed)
 
@@ -67,11 +65,10 @@ async def on_member_remove(member):
         members = server.all()[0]['members']
         members.append(member.id)
         server.update({"members": members}, Query().server == member.guild.id)
-    embed = discord.Embed()
+    embed = discord.Embed(color=discord.Color.orange())
     embed.title = "User Left"
     embed.add_field(name="Username", value=member)
     embed.add_field(name="UserId", value=member.id, inline=False)
-    embed.color = Colour.gold()
     channel = bot.get_channel(join_log_channel)
     await channel.send(embed=embed)
 
@@ -84,10 +81,11 @@ async def on_member_join(member):
         await member.add_roles(
             member.guild.get_role(muted_role_id), reason="Mute Persistence")
         server.update({"members": muted_members})
+        
+    embed = discord.Embed(color=discord.Color.blue())
     embed.title = "User Joined"
     embed.add_field(name="Username", value=member)
     embed.add_field(name="UserId", value=member.id, inline=False)
-    embed.color = Colour.blue()
     channel = bot.get_channel(join_log_channel)
     await channel.send(embed=embed)
 
