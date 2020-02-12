@@ -65,5 +65,14 @@ async def terminate(ctx):
     await ctx.guild.get_channel(517432636944416781).send(
         "%s has terminated the bot(id: %d)" % (ctx.author.name, ctx.author.id))
 
+@bot.command()
+@commands.has_any_role(*authorized_roles)
+async def ban(ctx, id: int, *, reason: str ):
+    try:
+        target = await bot.fetch_user(id)
+        await ctx.guild.ban(target,reason=reason)
+    except Exception as e:
+        await ctx.channel.send(e)
+
 
 bot.run(open("RE-Token.txt").read())
