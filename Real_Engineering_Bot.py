@@ -12,6 +12,7 @@ server = TinyDB("Data.json")
 
 muted_role_id = 517400874709155860  # actual id for RE
 log_channel_id = 480190548511031306  # id for RE
+join_log_channel = 519892056957648914 # id for RE
 
 
 def get_or_make_guild(server_id):
@@ -34,7 +35,7 @@ async def on_bulk_message_delete(messages):
 
 @bot.event
 async def on_message_delete(message):
-    embed = discord.Embed()
+    embed = discord.Embed(color=discord.Color.red())
     embed.title = "Deleted Message"
     embed.add_field(name="Username", value=message.author)
     embed.add_field(name="UserId", value=message.author.id, inline=False)
@@ -46,7 +47,7 @@ async def on_message_delete(message):
 @bot.event
 async def on_message_edit(before, after):
     if before.content != "" and before.content is not after.content:
-        embed = discord.Embed()
+        embed = discord.Embed(color=discord.Color.orange())
         embed.title = "Edited Message"
         embed.add_field(name="Username", value=after.author)
         embed.add_field(name="UserId", value=after.author.id, inline=False)
@@ -64,6 +65,12 @@ async def on_member_remove(member):
         members = server.all()[0]['members']
         members.append(member.id)
         server.update({"members": members}, Query().server == member.guild.id)
+    embed = discord.Embed(color=discord.Color.orange())
+    embed.title = "User Left"
+    embed.add_field(name="Username", value=member)
+    embed.add_field(name="UserId", value=member.id, inline=False)
+    channel = bot.get_channel(join_log_channel)
+    await channel.send(embed=embed)
 
 
 @bot.event
@@ -74,6 +81,13 @@ async def on_member_join(member):
         await member.add_roles(
             member.guild.get_role(muted_role_id), reason="Mute Persistence")
         server.update({"members": muted_members})
+        
+    embed = discord.Embed(color=discord.Color.blue())
+    embed.title = "User Joined"
+    embed.add_field(name="Username", value=member)
+    embed.add_field(name="UserId", value=member.id, inline=False)
+    channel = bot.get_channel(join_log_channel)
+    await channel.send(embed=embed)
 
 
 bot.run(open("RE-Token.txt").read())
