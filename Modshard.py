@@ -5,10 +5,14 @@ from threading import Event, Thread
 
 bot = commands.Bot(command_prefix="s!")
 info = json.loads(open("Info.json").read())
-
+# Cant get this to work will comment for now
+# bot.activity(discord.CustomActivity(name="Use s!help to get started"))
 
 def get_guild(guild_thing):
-    return info[str(guild_thing.guild.id)]
+    id = str(guild_thing.guild.id)
+    if id not in info:
+        info[id] = {}
+    return info[id]
 
 
 def call_repeatedly(interval, func, *args):
@@ -25,7 +29,7 @@ def call_repeatedly(interval, func, *args):
 def save():
     open("Info.json", "w").write(json.dumps(info))
 
-
+# autosave feature every 300 secs (5 minutes)
 call_repeatedly(300, save)
 
 default_webhook = {"username": "Modshard",
@@ -109,6 +113,8 @@ async def on_member_remove(member):
     # Sticky Role
     guild = get_guild(member)
     if "sticky role" in guild and member.guild.get_role(get_guild(member)['sticky role']) in member.roles:
+        if "evaders" not in guild:
+            guild['evaders'] = []
         guild['evaders'].append(member.id)
 
     # Logging
@@ -125,7 +131,7 @@ async def on_member_remove(member):
 async def on_member_join(member):
     # Sticky Roles
     guild = get_guild(member)
-    if "sticky role" in guild and member.id in guild['evaders']:
+    if "sticky role" in guild and "evaders" in guild and member.id in guild['evaders']:
         await member.add_roles(member.guild.get_role(guild['sticky role']))
 
     # Logging
@@ -141,10 +147,9 @@ async def on_member_join(member):
 @bot.group(invoke_without_command=True, aliases=["s"])
 @commands.check_any(commands.has_permissions(administrator=True), is_authorized())
 async def settings(ctx):
-    if str(ctx.guild.id) not in info:
-        info[str(ctx.guild.id)] = {}
+    """Gives you an overview of your current settings"""
     embed = discord.Embed(title="Displaying Settings")
-    guild = info[str(ctx.guild.id)]
+    guild = get_guild(ctx)
     v = None
     if "message log" in guild:
         v = "<#%d>" % guild["message log"]
@@ -159,38 +164,63 @@ async def settings(ctx):
         for role in guild['mod roles']:
             v += "%s\n" % ctx.guild.get_role(role).name
     embed.add_field(name="Mod Roles", value=v or "None")
+    v = None
+    if "sticky role" in guild:
+        v = ctx.guild.get_role(guild["sticky role"]).name
+    embed.add_field(name="Sticky Role", value=v or "None")
     await ctx.send(embed=embed)
 
 
-@settings.command()
+@bot.command()
 @commands.check_any(commands.has_permissions(administrator=True), is_authorized())
-async def reset(ctx, arg):
+async def reset(ctx, *, arg: str):
+    """Let's you reset a configured setting on the bot valid targets are
+    mod roles
+    basically lets you instantly remove all mod roles from the bot
+
+    message log
+    lets you turn off message logging permanently
+
+    join log
+    lets you turn off join log permanently
+
+    webhook
+    will reset the loggers appearance to its default(same avatar/name as the bot)
+
+    sticky role
+    will remove the sticky role
+
+    evaders
+    will allow all current evaders to rejoin without having the sticky role back on them
+    """
     if arg not in get_guild(ctx):
-        await ctx.send("No such attribute to reset!")
+        await ctx.send("%s is not a valid attribute!" % arg)
         return
 
     get_guild(ctx).pop(arg)
-    await ctx.send("%s has been reset successfully!")
+    await ctx.send("%s has been reset successfully!" % arg)
 
 
-@settings.command(aliases=["ml"])
+@bot.command(aliases=["ml"])
 @commands.check_any(commands.has_permissions(administrator=True), is_authorized())
 async def message_log(ctx, channel: discord.TextChannel):
-    info[str(ctx.guild.id)]["message log"] = channel.id
+    """Set the message log channel"""
+    get_guild(ctx)["message log"] = channel.id
     await ctx.send("Successfully set the message log channel to %s" % channel.name)
 
 
-@settings.command(aliases=["jl"])
+@bot.command(aliases=["jl"])
 @commands.check_any(commands.has_permissions(administrator=True), is_authorized())
 async def join_log(ctx, channel: discord.TextChannel):
-    info[str(ctx.guild.id)]["join log"] = channel.id
+    """Set the join log channel"""
+    get_guild(ctx)["join log"] = channel.id
     await ctx.send("Successfully set the join log channel to %s" % channel.name)
 
 
-@settings.group(invoke_without_command=True, aliases=["mr"])
+@bot.group(invoke_without_command=True, aliases=["mr"])
 @commands.check_any(commands.has_permissions(administrator=True), is_authorized())
-async def modroles(ctx):
-    """Displays the roles that are currently treated as mod roles by this bot"""
+async def mod_roles(ctx):
+    """Display Mod roles"""
     guild = get_guild(ctx)
     if "mod roles" in guild:
         v = ""
@@ -203,29 +233,29 @@ async def modroles(ctx):
     await ctx.send("Current modroles:%s" % v)
 
 
-@modroles.command(invoke_without_command=True)
+@mod_roles.command(invoke_without_command=True)
 @commands.check_any(commands.has_permissions(administrator=True), is_authorized())
 async def add(ctx, role: discord.Role):
-    """Add a mod role to the list"""
+    """Add a mod role"""
     guild = get_guild(ctx)
     if "mod roles" not in guild:
         guild["mod roles"] = []
-    info[str(ctx.guild.id)]["mod roles"].append(role.id)
+    guild["mod roles"].append(role.id)
     await ctx.send("Successfully added %s to the mod roles!" % role.name)
 
 
-@modroles.command(invoke_without_command=True, aliases=["rem"])
+@mod_roles.command(invoke_without_command=True, aliases=["rem"])
 @commands.check_any(commands.has_permissions(administrator=True), is_authorized())
 async def remove(ctx, role: discord.Role):
-    """Removes a mod role from the list"""
-    info[str(ctx.guild.id)]["mod roles"].remove(role.id)
+    """Remove a mod role"""
+    get_guild(ctx)["mod roles"].remove(role.id)
     await ctx.send("Successfully removed %s from the mod roles!" % role.name)
 
 
-@settings.group(invoke_without_command=True, aliases=["wh"])
+@bot.group(invoke_without_command=True, aliases=["wh"])
 @commands.check_any(commands.has_permissions(administrator=True), is_authorized())
 async def webhook(ctx):
-    """Shows you an example as to what the log part of the bot looks like on your server"""
+    """Shows example webhook"""
     embed = discord.Embed(title="Webhook Example!")
     embed.add_field(name="Sample Text", value="This is what i look like on here!")
     await webhook_send(ctx.channel.id, embed)
@@ -234,7 +264,7 @@ async def webhook(ctx):
 @webhook.command()
 @commands.check_any(commands.has_permissions(administrator=True), is_authorized())
 async def name(ctx, *, arg: str):
-    """Changes the webhook's name to the given name"""
+    """Set webhook name"""
     guild = get_guild(ctx)
     if "webhook" not in guild:
         guild["webhook"] = dict(default_webhook)
@@ -245,25 +275,27 @@ async def name(ctx, *, arg: str):
 @webhook.command()
 @commands.check_any(commands.has_permissions(administrator=True), is_authorized())
 async def avatar(ctx, *, arg: str):
-    """Changes the webhook's avatar to the given image URL"""
+    """Set Webhook avatar"""
     guild = get_guild(ctx)
     if "webhook" not in guild:
         guild["webhook"] = dict(default_webhook)
     guild["webhook"]["avatar_url"] = arg
-    await ctx.send("Updated the webhooks name to %s" % arg)
+    await ctx.send("Updated the webhooks avatar to %s" % arg)
+
+
+@bot.command(aliases=["sr"])
+async def sticky_role(ctx, role: discord.Role):
+    """Set a sticky role"""
+    get_guild(ctx)["sticky role"] = role.id
+    await ctx.send("Successfully set %s to be the sticky role" % role.name)
 
 
 # Debug, done for manual saving
 @bot.command(name="save")
 @commands.is_owner()
 async def save_command(ctx):
+    """Owner command: Lets me manually save data"""
     save()
-
-# Debug, done to get the bots avatar
-@bot.command()
-@commands.is_owner()
-async def pic_pls(ctx):
-    await ctx.send(bot.user.avatar_url)
 
 
 bot.run(open("Token.txt").read())
