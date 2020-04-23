@@ -301,7 +301,7 @@ async def save_command(ctx):
 
 @bot.command()
 @commands.check_any(commands.has_permissions(administrator=True), is_authorized())
-async def ban(ctx, id: int, *, reason: str):
+async def ban(ctx, id: int, *, reason: str = ""):
     try:
         target = await bot.fetch_user(id)
         await ctx.guild.ban(target, reason=reason)
