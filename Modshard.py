@@ -123,8 +123,7 @@ async def on_member_remove(member):
         embed.title = "User Left"
         embed.add_field(name="Username", value=member)
         embed.add_field(name="UserId", value=member.id, inline=False)
-        channel = bot.get_channel(guild['join log'])
-        await webhook_send(channel, embed)
+        await webhook_send(guild['join log'], embed)
 
 
 @bot.event
@@ -140,8 +139,7 @@ async def on_member_join(member):
         embed.title = "User Joined"
         embed.add_field(name="Username", value=member)
         embed.add_field(name="UserId", value=member.id, inline=False)
-        channel = bot.get_channel(guild["log channel"])
-        await channel.send(embed=embed)
+        await webhook_send(guild['join log'], embed)
 
 
 @bot.group(invoke_without_command=True, aliases=["s"])
