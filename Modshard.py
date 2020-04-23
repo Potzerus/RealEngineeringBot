@@ -3,7 +3,7 @@ import discord
 from discord.ext import commands
 from threading import Event, Thread
 
-bot = commands.Bot(command_prefix="s!")
+bot = commands.Bot(command_prefix="c!")
 info = json.loads(open("Info.json").read())
 # Cant get this to work will comment for now
 # bot.activity(discord.CustomActivity(name="Use s!help to get started"))
@@ -30,10 +30,10 @@ def save():
     open("Info.json", "w").write(json.dumps(info))
 
 # autosave feature every 300 secs (5 minutes)
-call_repeatedly(300, save)
+# call_repeatedly(300, save)
 
-default_webhook = {"username": "Modshard",
-                   "avatar_url": "https://cdn.discordapp.com/avatars/527283777605599243/ebac06e8cbe595e90c04999a1ace6de5.webp?size=1024"
+default_webhook = {"username": "Cephalobot",
+                   "avatar_url": "https://cdn.discordapp.com/attachments/278555022646706176/699359432756166716/Cephalobot.png"
                    }
 
 
@@ -89,7 +89,7 @@ async def on_message_delete(message):
         embed.add_field(name="Username", value=message.author)
         embed.add_field(name="UserId", value=message.author.id, inline=False)
         embed.add_field(name="Channel", value="<#%d>" % message.channel.id, inline=False)
-        embed.add_field(name="Content", value=message.content, inline=False)
+        embed.add_field(name="Content", value=message.content or "Empty Message", inline=False)
         await webhook_send(get_guild(message.channel)['message log'], embed)
 
 
@@ -103,8 +103,8 @@ async def on_message_edit(before, after):
         embed.add_field(name="Username", value=after.author)
         embed.add_field(name="UserId", value=after.author.id, inline=False)
         embed.add_field(name="Channel", value="<#%d>" % before.channel.id, inline=False)
-        embed.add_field(name="Before", value=before.content, inline=False)
-        embed.add_field(name="After", value=after.content, inline=False)
+        embed.add_field(name="Before", value=before.content or "Message Empty", inline=False)
+        embed.add_field(name="After", value=after.content or "Message Empty", inline=False)
         await webhook_send(guild['message log'], embed)
 
 
@@ -296,6 +296,17 @@ async def sticky_role(ctx, role: discord.Role):
 async def save_command(ctx):
     """Owner command: Lets me manually save data"""
     save()
+
+
+@bot.command()
+@commands.check_any(commands.has_permissions(administrator=True), is_authorized())
+async def ban(ctx, id: int, *, reason: str):
+    try:
+        target = await bot.fetch_user(id)
+        await ctx.guild.ban(target, reason=reason)
+    except Exception as e:
+        await ctx.channel.send(e)
+
 
 
 bot.run(open("Token.txt").read())
