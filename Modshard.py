@@ -284,6 +284,7 @@ async def avatar(ctx, *, arg: str):
 
 
 @bot.command(aliases=["sr"])
+@commands.check_any(commands.has_permissions(administrator=True), is_authorized())
 async def sticky_role(ctx, role: discord.Role):
     """Set a sticky role"""
     get_guild(ctx)["sticky role"] = role.id
