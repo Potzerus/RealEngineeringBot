@@ -5,6 +5,7 @@ from threading import Event, Thread
 
 bot = commands.Bot(command_prefix="c!")
 info = json.loads(open("Info.json").read())
+bot.clothes = ["Skirt"]
 # Cant get this to work will comment for now
 # bot.activity(discord.CustomActivity(name="Use s!help to get started"))
 
