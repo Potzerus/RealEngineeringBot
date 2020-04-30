@@ -139,6 +139,8 @@ async def on_member_join(member):
         embed.title = "User Joined"
         embed.add_field(name="Username", value=member)
         embed.add_field(name="UserId", value=member.id, inline=False)
+        date = member.created_at
+        embed.add_field(name="Account created on", value=str(date)[:str(date).find(".")] + "UTC")
         await webhook_send(guild['join log'], embed)
 
 
