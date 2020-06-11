@@ -202,6 +202,7 @@ async def reset(ctx, *, arg: str):
 
     get_guild(ctx).pop(arg)
     await ctx.send("%s has been reset successfully!" % arg)
+    save()
 
 
 @bot.command(aliases=["ml"])
@@ -210,6 +211,7 @@ async def message_log(ctx, channel: discord.TextChannel):
     """Set the message log channel"""
     get_guild(ctx)["message log"] = channel.id
     await ctx.send("Successfully set the message log channel to %s" % channel.name)
+    save()
 
 
 @bot.command(aliases=["jl"])
@@ -218,6 +220,7 @@ async def join_log(ctx, channel: discord.TextChannel):
     """Set the join log channel"""
     get_guild(ctx)["join log"] = channel.id
     await ctx.send("Successfully set the join log channel to %s" % channel.name)
+    save()
 
 
 @bot.group(invoke_without_command=True, aliases=["mr"])
@@ -234,6 +237,7 @@ async def mod_roles(ctx):
     else:
         v = "\nNone"
     await ctx.send("Current modroles:%s" % v)
+    save()
 
 
 @mod_roles.command(invoke_without_command=True)
@@ -245,6 +249,7 @@ async def add(ctx, role: discord.Role):
         guild["mod roles"] = []
     guild["mod roles"].append(role.id)
     await ctx.send("Successfully added %s to the mod roles!" % role.name)
+    save()
 
 
 @mod_roles.command(invoke_without_command=True, aliases=["rem"])
@@ -253,6 +258,7 @@ async def remove(ctx, role: discord.Role):
     """Remove a mod role"""
     get_guild(ctx)["mod roles"].remove(role.id)
     await ctx.send("Successfully removed %s from the mod roles!" % role.name)
+    save()
 
 
 @bot.group(invoke_without_command=True, aliases=["wh"])
@@ -273,6 +279,7 @@ async def name(ctx, *, arg: str):
         guild["webhook"] = dict(default_webhook)
     guild["webhook"]["username"] = arg
     await ctx.send("Updated the webhooks name to %s" % arg)
+    save()
 
 
 @webhook.command()
@@ -284,6 +291,7 @@ async def avatar(ctx, *, arg: str):
         guild["webhook"] = dict(default_webhook)
     guild["webhook"]["avatar_url"] = arg
     await ctx.send("Updated the webhooks avatar to %s" % arg)
+    save()
 
 
 @bot.command(aliases=["sr"])
@@ -292,6 +300,7 @@ async def sticky_role(ctx, role: discord.Role):
     """Set a sticky role"""
     get_guild(ctx)["sticky role"] = role.id
     await ctx.send("Successfully set %s to be the sticky role" % role.name)
+    save()
 
 
 # Debug, done for manual saving
