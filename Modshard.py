@@ -5,6 +5,8 @@ from threading import Event, Thread
 
 bot = commands.Bot(command_prefix="c!")
 info = json.loads(open("Info.json").read())
+
+
 # Cant get this to work will comment for now
 # bot.activity(discord.CustomActivity(name="Use s!help to get started"))
 
@@ -28,6 +30,7 @@ def call_repeatedly(interval, func, *args):
 
 def save():
     open("Info.json", "w").write(json.dumps(info))
+
 
 # autosave feature every 300 secs (5 minutes)
 # call_repeatedly(300, save)
@@ -305,9 +308,9 @@ async def ban(ctx, id: int, *, reason: str = ""):
     try:
         target = await bot.fetch_user(id)
         await ctx.guild.ban(target, reason=reason)
+        await ctx.send("Successfully banned <@{}> ({}#{})".format(target.id, target.name, target.discriminator))
     except Exception as e:
         await ctx.channel.send(e)
-
 
 
 bot.run(open("Token.txt").read())
