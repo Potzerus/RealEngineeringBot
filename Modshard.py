@@ -311,15 +311,66 @@ async def save_command(ctx):
     save()
 
 
-@bot.command()
-@commands.check_any(commands.has_permissions(administrator=True), is_authorized())
-async def ban(ctx, id: int, *, reason: str = ""):
+async def _ban(ctx, id: int, *, reason: str = ""):
     try:
         target = await bot.fetch_user(id)
         await ctx.guild.ban(target, reason=reason)
-        await ctx.send("Successfully banned <@{}> ({}#{})".format(target.id, target.name, target.discriminator))
+        return True, target
     except Exception as e:
-        await ctx.channel.send(e)
+        return False, e
+
+
+async def _poll(ctx, id: int, *, reason: str = ""):
+    try:
+        target = await bot.fetch_user(id)
+        return True, target
+    except Exception as e:
+        return False, e
+
+
+@bot.command()
+@commands.check_any(commands.has_permissions(administrator=True), is_authorized())
+async def ban(ctx, id: int, *, reason: str = ""):
+    target = await _ban(ctx, id, reason=reason)
+    if target[0]:
+        await ctx.send(
+            "Successfully banned <@{}> ({}#{})".format(target[1].id, target[1].name, target[1].discriminator))
+    else:
+        await ctx.send("Failed to ban %s" % target[2])
+
+
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def massban(ctx, *, reason: str = ""):
+    def check(msg):
+        return ctx.author.id == msg.author.id and ctx.channel.id == msg.channel.id
+
+    await ctx.send("Please send the IDs of users you want to ban, seperated by spaces")
+    message = await bot.wait_for("message", check=check)
+    identifiers = message.content.split(" ")
+
+    def is_valid(s):
+        try:
+            int(s)
+            return True
+        except ValueError:
+            return False
+
+    temp = []
+    for i in identifiers:
+        if not is_valid(i):
+            await ctx.send("%s is not an ID!" % i)
+        else:
+            temp.append(int(i))
+    output = ""
+    for i in temp:
+        result = await _ban(ctx, i, reason=reason)
+        if result[0]:
+            output += "<@{.id}> ({.name}#{.discriminator}): Successful ban".format(result[1], result[1], result[1])
+        else:
+            output += "%d Failed to ban due to %s" % (i, result[1])
+        output += "\n"
+    await ctx.send("Report:\n" + (output or "No valid IDs listed"))
 
 
 bot.run(open("Token.txt").read())
