@@ -26,7 +26,7 @@ default_webhook = {"username": "Cephalobot",
                    }
 
 
-def is_authorized():
+def is_mod():
     def predicate(ctx):
         guild = get_guild(ctx)
         if "mod roles" in guild:
@@ -34,6 +34,20 @@ def is_authorized():
             roles = ctx.author.roles
             for role in roles:
                 if role.id in mod_roles:
+                    return True
+        return False
+
+    return commands.check(predicate)
+
+
+def is_admin():
+    def predicate(ctx):
+        guild = get_guild(ctx)
+        if "admin roles" in guild:
+            admin_roles = guild["admin roles"]
+            roles = ctx.author.roles
+            for role in roles:
+                if role.id in admin_roles:
                     return True
         return False
 
@@ -148,7 +162,7 @@ async def on_member_join(member):
 
 
 @bot.group(invoke_without_command=True, aliases=["s"])
-@commands.check_any(commands.has_permissions(administrator=True), is_authorized())
+@commands.check_any(commands.has_permissions(administrator=True), is_mod(),is_admin())
 async def settings(ctx):
     """Gives you an overview of your current settings"""
     embed = discord.Embed(title="Displaying Settings")
@@ -168,6 +182,12 @@ async def settings(ctx):
             v += "%s\n" % ctx.guild.get_role(role).name
     embed.add_field(name="Mod Roles", value=v or "None")
     v = None
+    if "admin roles" in guild:
+        v = ""
+        for role in guild['admin roles']:
+            v += "%s\n" % ctx.guild.get_role(role).name
+    embed.add_field(name="Admin Roles", value=v or "None")
+    v = None
     if "sticky role" in guild:
         v = ctx.guild.get_role(guild["sticky role"]).name
     embed.add_field(name="Sticky Role", value=v or "None")
@@ -175,11 +195,14 @@ async def settings(ctx):
 
 
 @bot.command()
-@commands.check_any(commands.has_permissions(administrator=True), is_authorized())
+@commands.check_any(commands.has_permissions(administrator=True), is_mod(),is_admin())
 async def reset(ctx, *, arg: str):
     """Let's you reset a configured setting on the bot valid targets are
     mod roles
     basically lets you instantly remove all mod roles from the bot
+
+    admin roles
+    basically lets you instantly remove all admin roles from the bot
 
     message log
     lets you turn off message logging permanently
@@ -199,14 +222,16 @@ async def reset(ctx, *, arg: str):
     if arg not in get_guild(ctx):
         await ctx.send("%s is not a valid attribute!" % arg)
         return
-
+    if arg == "admin roles" and (not is_admin()(ctx) and not commands.has_permissions(administrator=True)(ctx)):
+        await ctx.send("You must be an Admin or have admin perms to clear Admin roles")
+        return
     get_guild(ctx).pop(arg)
     await ctx.send("%s has been reset successfully!" % arg)
     save()
 
 
 @bot.command(aliases=["ml"])
-@commands.check_any(commands.has_permissions(administrator=True), is_authorized())
+@commands.check_any(commands.has_permissions(administrator=True), is_mod(),is_admin())
 async def message_log(ctx, channel: discord.TextChannel):
     """Set the message log channel"""
     get_guild(ctx)["message log"] = channel.id
@@ -215,7 +240,7 @@ async def message_log(ctx, channel: discord.TextChannel):
 
 
 @bot.command(aliases=["jl"])
-@commands.check_any(commands.has_permissions(administrator=True), is_authorized())
+@commands.check_any(commands.has_permissions(administrator=True), is_mod(),is_admin())
 async def join_log(ctx, channel: discord.TextChannel):
     """Set the join log channel"""
     get_guild(ctx)["join log"] = channel.id
@@ -224,7 +249,7 @@ async def join_log(ctx, channel: discord.TextChannel):
 
 
 @bot.group(invoke_without_command=True, aliases=["mr"])
-@commands.check_any(commands.has_permissions(administrator=True), is_authorized())
+@commands.check_any(commands.has_permissions(administrator=True), is_mod(),is_admin())
 async def mod_roles(ctx):
     """Display Mod roles"""
     guild = get_guild(ctx)
@@ -240,7 +265,7 @@ async def mod_roles(ctx):
 
 
 @mod_roles.command(invoke_without_command=True)
-@commands.check_any(commands.has_permissions(administrator=True), is_authorized())
+@commands.check_any(commands.has_permissions(administrator=True), is_mod(),is_admin())
 async def add(ctx, role: discord.Role):
     """Add a mod role"""
     guild = get_guild(ctx)
@@ -252,16 +277,52 @@ async def add(ctx, role: discord.Role):
 
 
 @mod_roles.command(invoke_without_command=True, aliases=["rem"])
-@commands.check_any(commands.has_permissions(administrator=True), is_authorized())
+@commands.check_any(commands.has_permissions(administrator=True), is_mod(),is_admin())
 async def remove(ctx, role: discord.Role):
     """Remove a mod role"""
     get_guild(ctx)["mod roles"].remove(role.id)
     await ctx.send("Successfully removed %s from the mod roles!" % role.name)
     save()
 
+@bot.group(invoke_without_command=True, aliases=["ar"])
+@commands.check_any(commands.has_permissions(administrator=True), is_mod(),is_admin())
+async def admin_roles(ctx):
+    """Display Admin roles"""
+    guild = get_guild(ctx)
+    if "admin roles" in guild:
+        v = ""
+        for role in guild['admin roles']:
+            v += "\n%s" % ctx.guild.get_role(role).name
+        if len(v) == 0:
+            v = "\nNone"
+    else:
+        v = "\nNone"
+    await ctx.send("Current adminroles:%s" % v)
+
+
+@admin_roles.command(invoke_without_command=True)
+@commands.check_any(commands.has_permissions(administrator=True),is_admin())
+async def add(ctx, role: discord.Role):
+    """Add an admin role"""
+    guild = get_guild(ctx)
+    if "admin roles" not in guild:
+        guild["admin roles"] = []
+    guild["admin roles"].append(role.id)
+    await ctx.send("Successfully added %s to the admin roles!" % role.name)
+    save()
+
+
+@admin_roles.command(invoke_without_command=True, aliases=["rem"])
+@commands.check_any(commands.has_permissions(administrator=True),is_admin())
+async def remove(ctx, role: discord.Role):
+    """Remove a admin role"""
+    get_guild(ctx)["admin roles"].remove(role.id)
+    await ctx.send("Successfully removed %s from the admin roles!" % role.name)
+    save()
+
 
 @bot.group(invoke_without_command=True, aliases=["wh"])
-@commands.check_any(commands.has_permissions(administrator=True), is_authorized())
+@commands.check_any(commands.has_permissions(administrator=True), is_mod(),is_admin())
 async def webhook(ctx):
     """Shows example webhook"""
     embed = discord.Embed(title="Webhook Example!")
@@ -270,7 +331,7 @@ async def webhook(ctx):
 
 
 @webhook.command()
-@commands.check_any(commands.has_permissions(administrator=True), is_authorized())
+@commands.check_any(commands.has_permissions(administrator=True), is_mod(),is_admin())
 async def name(ctx, *, arg: str):
     """Set webhook name"""
     guild = get_guild(ctx)
@@ -282,7 +343,7 @@ async def name(ctx, *, arg: str):
 
 
 @webhook.command()
-@commands.check_any(commands.has_permissions(administrator=True), is_authorized())
+@commands.check_any(commands.has_permissions(administrator=True), is_mod(),is_admin())
 async def avatar(ctx, *, arg: str):
     """Set Webhook avatar"""
     guild = get_guild(ctx)
@@ -294,7 +355,7 @@ async def avatar(ctx, *, arg: str):
 
 
 @bot.command(aliases=["sr"])
-@commands.check_any(commands.has_permissions(administrator=True), is_authorized())
+@commands.check_any(commands.has_permissions(administrator=True), is_mod(),is_admin())
 async def sticky_role(ctx, role: discord.Role):
     """Set a sticky role"""
     get_guild(ctx)["sticky role"] = role.id
@@ -328,7 +389,7 @@ async def _poll(ctx, id: int, *, reason: str = ""):
 
 
 @bot.command()
-@commands.check_any(commands.has_permissions(administrator=True), is_authorized())
+@commands.check_any(commands.has_permissions(administrator=True), is_mod(),is_admin())
 async def ban(ctx, id: int, *, reason: str = ""):
     target = await _ban(ctx, id, reason=reason)
     if target[0]:
@@ -339,7 +400,7 @@ async def ban(ctx, id: int, *, reason: str = ""):
 
 
 @bot.command()
-@commands.has_permissions(administrator=True)
+@commands.check_any(commands.has_permissions(administrator=True),is_admin())
 async def massban(ctx, *, reason: str = ""):
     def check(msg):
         return ctx.author.id == msg.author.id and ctx.channel.id == msg.channel.id
