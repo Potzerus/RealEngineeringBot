@@ -17,23 +17,9 @@ def get_guild(guild_thing):
     return info[id]
 
 
-def call_repeatedly(interval, func, *args):
-    stopped = Event()
-
-    def loop():
-        while not stopped.wait(interval):  # the first call is in `interval` secs
-            func(*args)
-
-    Thread(target=loop).start()
-    return stopped.set
-
-
 def save():
     open("Info.json", "w").write(json.dumps(info))
 
-
-# autosave feature every 300 secs (5 minutes)
-# call_repeatedly(300, save)
 
 default_webhook = {"username": "Cephalobot",
                    "avatar_url": "https://cdn.discordapp.com/attachments/278555022646706176/699359432756166716/Cephalobot.png"
@@ -237,7 +223,6 @@ async def mod_roles(ctx):
     else:
         v = "\nNone"
     await ctx.send("Current modroles:%s" % v)
-    save()
 
 
 @mod_roles.command(invoke_without_command=True)
