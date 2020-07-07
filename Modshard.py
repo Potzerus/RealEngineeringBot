@@ -53,6 +53,20 @@ async def webhook_send(channel_id, embed):
     await hook.send(embed=embed, **webhook_info)
 
 
+async def send_long(ctx, text: str):
+    while True:
+        if len(text) < 2000:
+            await ctx.send(text)
+            break
+        if "\n" in text:
+            pos = text[:2000].rfind(" ")
+            await ctx.send(text[:pos])
+            text = text[pos + 1:]
+        else:
+            await ctx.send(text[:2000])
+            text = text[2000:]
+
+
 @bot.event
 async def on_ready():
     global appli
@@ -347,15 +361,59 @@ async def massban(ctx, *, reason: str = ""):
             await ctx.send("%s is not an ID!" % i)
         else:
             temp.append(int(i))
-    output = ""
+    success = []
+    failure = []
     for i in temp:
         result = await _ban(ctx, i, reason=reason)
         if result[0]:
-            output += "<@{.id}> ({.name}#{.discriminator}): Successful ban".format(result[1], result[1], result[1])
+            success.append(str(result[1].id))
         else:
-            output += "%d Failed to ban due to %s" % (i, result[1])
-        output += "\n"
-    await ctx.send("Report:\n" + (output or "No valid IDs listed"))
+            failure.append(str(i))
+    output = "{}/{} ID's banned\n\n Successful bans:\n {}\n\n Failed bans:\n {}".format(len(success),
+                                                                                        len(success) + len(failure),
+                                                                                        " ".join(success),
+                                                                                        " ".join(failure))
+    await send_long(ctx, output)
+
+
+@bot.command()
+@commands.is_owner()
+async def masspong(ctx, *, reason: str = ""):
+    """A debug tool for me to check the command"""
+
+    def check(msg):
+        return ctx.author.id == msg.author.id and ctx.channel.id == msg.channel.id
+
+    await ctx.send("Please send the IDs of users you want to ping, seperated by spaces")
+    message = await bot.wait_for("message", check=check)
+    identifiers = message.content.split(" ")
+
+    def is_valid(s):
+        try:
+            int(s)
+            return True
+        except ValueError:
+            return False
+
+    temp = []
+    for i in identifiers:
+        if not is_valid(i):
+            await ctx.send("%s is not an ID!" % i)
+        else:
+            temp.append(int(i))
+    success = []
+    failure = []
+    for i in temp:
+        result = await _ban(ctx, i, reason=reason)
+        if result[0]:
+            success.append(str(result[1].id))
+        else:
+            failure.append(str(i))
+    output = "{}/{} ID's banned\n\n Successful bans:\n {}\n\n Failed bans:\n {}".format(len(success),
+                                                                                        len(success) + len(failure),
+                                                                                        " ".join(success),
+                                                                                        " ".join(failure))
+    await send_long(ctx, output)
 
 
 bot.run(open("Token.txt").read())
