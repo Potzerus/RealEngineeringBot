@@ -396,7 +396,7 @@ async def ban(ctx, id: int, *, reason: str = ""):
         await ctx.send(
             "Successfully banned <@{}> ({}#{})".format(target[1].id, target[1].name, target[1].discriminator))
     else:
-        await ctx.send("Failed to ban %s" % target[2])
+        await ctx.send("Failed to ban %s" % target[1])
 
 
 @bot.command()
