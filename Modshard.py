@@ -162,7 +162,7 @@ async def on_member_join(member):
 
 
 @bot.group(invoke_without_command=True, aliases=["s"])
-@commands.check_any(commands.has_permissions(administrator=True), is_mod(),is_admin())
+@commands.check_any(commands.has_permissions(administrator=True), is_mod(), is_admin())
 async def settings(ctx):
     """Gives you an overview of your current settings"""
     embed = discord.Embed(title="Displaying Settings")
@@ -195,7 +195,7 @@ async def settings(ctx):
 
 
 @bot.command()
-@commands.check_any(commands.has_permissions(administrator=True), is_mod(),is_admin())
+@commands.check_any(commands.has_permissions(administrator=True), is_mod(), is_admin())
 async def reset(ctx, *, arg: str):
     """Let's you reset a configured setting on the bot valid targets are
     mod roles
@@ -231,7 +231,7 @@ async def reset(ctx, *, arg: str):
 
 
 @bot.command(aliases=["ml"])
-@commands.check_any(commands.has_permissions(administrator=True), is_mod(),is_admin())
+@commands.check_any(commands.has_permissions(administrator=True), is_mod(), is_admin())
 async def message_log(ctx, channel: discord.TextChannel):
     """Set the message log channel"""
     get_guild(ctx)["message log"] = channel.id
@@ -240,7 +240,7 @@ async def message_log(ctx, channel: discord.TextChannel):
 
 
 @bot.command(aliases=["jl"])
-@commands.check_any(commands.has_permissions(administrator=True), is_mod(),is_admin())
+@commands.check_any(commands.has_permissions(administrator=True), is_mod(), is_admin())
 async def join_log(ctx, channel: discord.TextChannel):
     """Set the join log channel"""
     get_guild(ctx)["join log"] = channel.id
@@ -249,7 +249,7 @@ async def join_log(ctx, channel: discord.TextChannel):
 
 
 @bot.group(invoke_without_command=True, aliases=["mr"])
-@commands.check_any(commands.has_permissions(administrator=True), is_mod(),is_admin())
+@commands.check_any(commands.has_permissions(administrator=True), is_mod(), is_admin())
 async def mod_roles(ctx):
     """Display Mod roles"""
     guild = get_guild(ctx)
@@ -265,7 +265,7 @@ async def mod_roles(ctx):
 
 
 @mod_roles.command(invoke_without_command=True)
-@commands.check_any(commands.has_permissions(administrator=True), is_mod(),is_admin())
+@commands.check_any(commands.has_permissions(administrator=True), is_mod(), is_admin())
 async def add(ctx, role: discord.Role):
     """Add a mod role"""
     guild = get_guild(ctx)
@@ -277,15 +277,16 @@ async def add(ctx, role: discord.Role):
 
 
 @mod_roles.command(invoke_without_command=True, aliases=["rem"])
-@commands.check_any(commands.has_permissions(administrator=True), is_mod(),is_admin())
+@commands.check_any(commands.has_permissions(administrator=True), is_mod(), is_admin())
 async def remove(ctx, role: discord.Role):
     """Remove a mod role"""
     get_guild(ctx)["mod roles"].remove(role.id)
     await ctx.send("Successfully removed %s from the mod roles!" % role.name)
     save()
 
+
 @bot.group(invoke_without_command=True, aliases=["ar"])
-@commands.check_any(commands.has_permissions(administrator=True), is_mod(),is_admin())
+@commands.check_any(commands.has_permissions(administrator=True), is_mod(), is_admin())
 async def admin_roles(ctx):
     """Display Admin roles"""
     guild = get_guild(ctx)
@@ -301,7 +302,7 @@ async def admin_roles(ctx):
 
 
 @admin_roles.command(invoke_without_command=True)
-@commands.check_any(commands.has_permissions(administrator=True),is_admin())
+@commands.check_any(commands.has_permissions(administrator=True), is_admin())
 async def add(ctx, role: discord.Role):
     """Add an admin role"""
     guild = get_guild(ctx)
@@ -313,7 +314,7 @@ async def add(ctx, role: discord.Role):
 
 
 @admin_roles.command(invoke_without_command=True, aliases=["rem"])
-@commands.check_any(commands.has_permissions(administrator=True),is_admin())
+@commands.check_any(commands.has_permissions(administrator=True), is_admin())
 async def remove(ctx, role: discord.Role):
     """Remove a admin role"""
     get_guild(ctx)["admin roles"].remove(role.id)
@@ -322,7 +323,7 @@ async def remove(ctx, role: discord.Role):
 
 
 @bot.group(invoke_without_command=True, aliases=["wh"])
-@commands.check_any(commands.has_permissions(administrator=True), is_mod(),is_admin())
+@commands.check_any(commands.has_permissions(administrator=True), is_mod(), is_admin())
 async def webhook(ctx):
     """Shows example webhook"""
     embed = discord.Embed(title="Webhook Example!")
@@ -331,7 +332,7 @@ async def webhook(ctx):
 
 
 @webhook.command()
-@commands.check_any(commands.has_permissions(administrator=True), is_mod(),is_admin())
+@commands.check_any(commands.has_permissions(administrator=True), is_mod(), is_admin())
 async def name(ctx, *, arg: str):
     """Set webhook name"""
     guild = get_guild(ctx)
@@ -343,7 +344,7 @@ async def name(ctx, *, arg: str):
 
 
 @webhook.command()
-@commands.check_any(commands.has_permissions(administrator=True), is_mod(),is_admin())
+@commands.check_any(commands.has_permissions(administrator=True), is_mod(), is_admin())
 async def avatar(ctx, *, arg: str):
     """Set Webhook avatar"""
     guild = get_guild(ctx)
@@ -355,7 +356,7 @@ async def avatar(ctx, *, arg: str):
 
 
 @bot.command(aliases=["sr"])
-@commands.check_any(commands.has_permissions(administrator=True), is_mod(),is_admin())
+@commands.check_any(commands.has_permissions(administrator=True), is_mod(), is_admin())
 async def sticky_role(ctx, role: discord.Role):
     """Set a sticky role"""
     get_guild(ctx)["sticky role"] = role.id
@@ -371,11 +372,23 @@ async def save_command(ctx):
     save()
 
 
+async def is_banned(guild, id: int):
+    bans = await guild.bans()
+    for entry in bans:
+        if entry.user.id == id:
+            return True, "User is already banned reason: %s" % entry.reason or "No reason given"
+    return False
+
+
 async def _ban(ctx, id: int, *, reason: str = ""):
     try:
-        target = await bot.fetch_user(id)
-        await ctx.guild.ban(target, reason=reason)
-        return True, target
+        info = await is_banned(ctx.guild, id)
+        if not info[0]:
+            target = await bot.fetch_user(id)
+            await ctx.guild.ban(target, reason=reason)
+            return True, target
+        else:
+            return False, info[1]
     except Exception as e:
         return False, e
 
@@ -389,7 +402,7 @@ async def _poll(ctx, id: int, *, reason: str = ""):
 
 
 @bot.command()
-@commands.check_any(commands.has_permissions(administrator=True), is_mod(),is_admin())
+@commands.check_any(commands.has_permissions(administrator=True), is_mod(), is_admin())
 async def ban(ctx, id: int, *, reason: str = ""):
     target = await _ban(ctx, id, reason=reason)
     if target[0]:
@@ -400,7 +413,7 @@ async def ban(ctx, id: int, *, reason: str = ""):
 
 
 @bot.command()
-@commands.check_any(commands.has_permissions(administrator=True),is_admin())
+@commands.check_any(commands.has_permissions(administrator=True), is_admin())
 async def massban(ctx, *, reason: str = ""):
     def check(msg):
         return ctx.author.id == msg.author.id and ctx.channel.id == msg.channel.id
@@ -471,9 +484,9 @@ async def masspong(ctx, *, reason: str = ""):
         else:
             failure.append(str(i))
     output = "{}/{} ID's banned\n\n Successful pings:\n {}\n\n Failed pings:\n {}".format(len(success),
-                                                                                        len(success) + len(failure),
-                                                                                        " ".join(success),
-                                                                                        " ".join(failure))
+                                                                                          len(success) + len(failure),
+                                                                                          " ".join(success),
+                                                                                          " ".join(failure))
     await send_long(ctx, output)
 
 
