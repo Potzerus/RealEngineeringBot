@@ -376,7 +376,8 @@ async def is_banned(guild, id: int):
     bans = await guild.bans()
     for entry in bans:
         if entry.user.id == id:
-            return True, "User is already banned reason: %s" % entry.reason or "No reason given"
+            reason = entry.reason if entry.reason is not None else "No reason given"
+            return True, ", User is already banned. Reason: %s" % reason
     return False
 
 
