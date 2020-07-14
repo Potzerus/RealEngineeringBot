@@ -378,7 +378,7 @@ async def is_banned(guild, id: int):
         if entry.user.id == id:
             reason = entry.reason if entry.reason is not None else "No reason given"
             return True, ", User is already banned. Reason: %s" % reason
-    return False
+    return False, ""
 
 
 async def _ban(ctx, id: int, *, reason: str = ""):
