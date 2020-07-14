@@ -470,7 +470,7 @@ async def masspong(ctx, *, reason: str = ""):
             success.append(str(result[1].id))
         else:
             failure.append(str(i))
-    output = "{}/{} ID's banned\n\n Successful bans:\n {}\n\n Failed bans:\n {}".format(len(success),
+    output = "{}/{} ID's banned\n\n Successful pings:\n {}\n\n Failed pings:\n {}".format(len(success),
                                                                                         len(success) + len(failure),
                                                                                         " ".join(success),
                                                                                         " ".join(failure))
